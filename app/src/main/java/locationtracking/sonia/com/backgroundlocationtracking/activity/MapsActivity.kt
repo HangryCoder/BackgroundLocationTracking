@@ -1,7 +1,11 @@
 package locationtracking.sonia.com.backgroundlocationtracking.activity
 
+import android.annotation.SuppressLint
+import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -10,11 +14,15 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import locationtracking.sonia.com.backgroundlocationtracking.R
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
+    private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -22,6 +30,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            // Got last known location. In some rare situations this can be null.
+            if (location != null) {
+                Utils.logd(TAG, "Location found!!")
+            }
+        }
     }
 
     /**
