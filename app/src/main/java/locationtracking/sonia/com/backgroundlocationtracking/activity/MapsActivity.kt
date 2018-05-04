@@ -1,5 +1,6 @@
 package locationtracking.sonia.com.backgroundlocationtracking.activity
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
@@ -16,6 +17,17 @@ import locationtracking.sonia.com.backgroundlocationtracking.R
 import locationtracking.sonia.com.backgroundlocationtracking.interfaces.LocationListener
 import locationtracking.sonia.com.backgroundlocationtracking.utils.LocationProvider
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.DialogInterface
+import android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale
+import android.content.pm.PackageManager
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
+import android.widget.Toast
+
+
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
@@ -41,7 +53,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
         mMap.clear()
         val currentLocation = LatLng(location.latitude, location.longitude)
         mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation,15f))
     }
 
     override fun onResume() {
@@ -54,16 +66,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
         locationProvider.stopLocationUpdates()
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -72,5 +74,67 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
        // val sydney = LatLng(-34.0, 151.0)
         //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+    }
+
+    /**
+     * Do this later...
+     * Permission Dialog
+     * */
+    val MY_PERMISSIONS_REQUEST_LOCATION = 99
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                AlertDialog.Builder(this)
+                        .setTitle("Location Permission Needed")
+                        .setMessage("This app needs the Location permission, please accept to use location functionality")
+                        .setPositiveButton("OK", { dialogInterface, i ->
+                            //Prompt the user once explanation has been shown
+                            ActivityCompat.requestPermissions(this@MapsActivity,
+                                    arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                                    MY_PERMISSIONS_REQUEST_LOCATION)
+                        })
+                        .create()
+                        .show()
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        MY_PERMISSIONS_REQUEST_LOCATION)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            MY_PERMISSIONS_REQUEST_LOCATION -> {
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // location-related task you need to do.
+                    if (ContextCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                       /* if (mGoogleApiClient == null) {
+                            buildGoogleApiClient()
+                        }
+                        mGoogleMap.setMyLocationEnabled(true)*/
+                    }
+
+                } else {
+
+                    Utils.customToast(this, resources.getString(R.string.permission_denied))
+                }
+                return
+            }
+        }
     }
 }
