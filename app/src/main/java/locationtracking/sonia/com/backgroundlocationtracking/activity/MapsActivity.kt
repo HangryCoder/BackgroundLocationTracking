@@ -13,15 +13,15 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import locationtracking.sonia.com.backgroundlocationtracking.R
+import locationtracking.sonia.com.backgroundlocationtracking.interfaces.LocationListener
+import locationtracking.sonia.com.backgroundlocationtracking.utils.LocationProvider
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
     private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
-    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationProvider: LocationProvider
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,39 +32,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationProvider = LocationProvider(this, this)
+    }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            // Got last known location. In some rare situations this can be null.
-            if (location != null) {
-                Utils.logd(TAG, "Location found!!")
-            }
-        }
-
-        locationRequest = LocationRequest.create()
-                .setInterval(5000)
-                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult ?: return
-                for (location in locationResult.locations) {
-                    // Update UI with location data
-                    // ...
-                    Utils.logd(TAG, "LocationCallBAck ${location.latitude} " + location.longitude)
-                }
-            }
-        }
+    override fun passLocationData(location: Location) {
+        Utils.logd(TAG, "passLocationData ${location.latitude} " + location.longitude)
     }
 
     override fun onResume() {
         super.onResume()
-        startLocationUpdates()
+        locationProvider.startLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        stopLocationUpdates()
+        locationProvider.stopLocationUpdates()
     }
 
     /**
@@ -83,16 +65,5 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun startLocationUpdates() {
-        fusedLocationClient.requestLocationUpdates(locationRequest,
-                locationCallback,
-                null /* Looper */)
-    }
-
-    private fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 }

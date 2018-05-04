@@ -13,7 +13,7 @@ class Utils {
 
         fun logd(TAG: String, message: String) {
             if (DEBUG) {
-                Log.e(TAG, message)
+                Log.d(TAG, message)
             }
         }
 
