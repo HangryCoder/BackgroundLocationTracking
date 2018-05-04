@@ -25,8 +25,8 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.widget.Toast
-
-
+import kotlinx.android.synthetic.main.activity_maps.*
+import java.util.ArrayList
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
@@ -34,6 +34,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
     private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
     private lateinit var locationProvider: LocationProvider
+    private val CAMERA_ZOOM = 15f
+    private var points: ArrayList<LatLng> = ArrayList()
+    private var isShiftStarted = false
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,15 +48,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
         mapFragment.getMapAsync(this)
 
         locationProvider = LocationProvider(this, this)
+
+        startShiftBtn.setOnClickListener {
+            if (!locationProvider.isTrackingEnabled) {
+
+            }
+        }
+
+        stopShiftBtn.setOnClickListener {
+            if (locationProvider.isTrackingEnabled) {
+
+            }
+        }
     }
 
     override fun passLocationData(location: Location) {
         Utils.logd(TAG, "passLocationData ${location.latitude} " + location.longitude)
 
-        mMap.clear()
-        val currentLocation = LatLng(location.latitude, location.longitude)
-        mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation,15f))
+        // mMap.clear()
+        // val currentLocation = LatLng(location.latitude, location.longitude)
+        // mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
+        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, CAMERA_ZOOM))
     }
 
     override fun onResume() {
@@ -66,14 +81,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
         locationProvider.stopLocationUpdates()
     }
 
+    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-       // mMap.isMyLocationEnabled = true
-        // Add a marker in Sydney and move the camera
-       // val sydney = LatLng(-34.0, 151.0)
-        //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        //mMap.isMyLocationEnabled = true
+
+        locationProvider.getFusedLocationClient().lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                val userLocation = LatLng(location.latitude, location.longitude)
+                mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
+            }
+        }
     }
 
     /**
@@ -81,6 +101,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
      * Permission Dialog
      * */
     val MY_PERMISSIONS_REQUEST_LOCATION = 99
+
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -123,10 +144,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                     if (ContextCompat.checkSelfPermission(this,
                             Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-                       /* if (mGoogleApiClient == null) {
-                            buildGoogleApiClient()
-                        }
-                        mGoogleMap.setMyLocationEnabled(true)*/
+                        /* if (mGoogleApiClient == null) {
+                             buildGoogleApiClient()
+                         }
+                         mGoogleMap.setMyLocationEnabled(true)*/
                     }
 
                 } else {

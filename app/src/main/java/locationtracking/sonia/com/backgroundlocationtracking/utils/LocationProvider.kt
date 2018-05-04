@@ -15,21 +15,20 @@ class LocationProvider() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
+    private val INTERVAL = 5000L
+    private val FASTEST_INTERVAL = 1000L
+    var isTrackingEnabled = false
+        get() = field
+
 
     @SuppressLint("MissingPermission")
     constructor(context: Context, locationListener: LocationListener) : this() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            // Got last known location. In some rare situations this can be null.
-            if (location != null) {
-                Utils.logd(TAG, "Location found!!")
-            }
-        }
-
         locationRequest = LocationRequest.create()
-                .setInterval(5000)
+                .setInterval(INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL)
                 .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
 
         locationCallback = object : LocationCallback() {
@@ -41,16 +40,23 @@ class LocationProvider() {
                 }
             }
         }
+
+    }
+
+    fun getFusedLocationClient(): FusedLocationProviderClient {
+        return fusedLocationClient
     }
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
         fusedLocationClient.requestLocationUpdates(locationRequest,
                 locationCallback,
-                null /* Looper */)
+                null)
+        isTrackingEnabled = true
     }
 
     fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+        isTrackingEnabled = false
     }
 }
