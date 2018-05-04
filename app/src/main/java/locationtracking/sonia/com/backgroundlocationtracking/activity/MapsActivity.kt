@@ -37,6 +37,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
     override fun passLocationData(location: Location) {
         Utils.logd(TAG, "passLocationData ${location.latitude} " + location.longitude)
+
+        mMap.clear()
+        val currentLocation = LatLng(location.latitude, location.longitude)
+        mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation))
     }
 
     override fun onResume() {
@@ -58,12 +63,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
+       // mMap.isMyLocationEnabled = true
         // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+       // val sydney = LatLng(-34.0, 151.0)
+        //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 }
