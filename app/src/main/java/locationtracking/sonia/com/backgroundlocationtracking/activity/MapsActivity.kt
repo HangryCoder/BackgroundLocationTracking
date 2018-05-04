@@ -21,10 +21,12 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.DialogInterface
 import android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.widget.Toast
+import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.util.ArrayList
 
@@ -51,13 +53,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
         startShiftBtn.setOnClickListener {
             if (!locationProvider.isTrackingEnabled) {
+                mMap.clear()
+                points.clear()
 
+                getUserCurrentLocation()
+                locationProvider.startLocationUpdates()
             }
         }
 
         stopShiftBtn.setOnClickListener {
             if (locationProvider.isTrackingEnabled) {
-
+                locationProvider.stopLocationUpdates()
             }
         }
     }
@@ -65,28 +71,49 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
     override fun passLocationData(location: Location) {
         Utils.logd(TAG, "passLocationData ${location.latitude} " + location.longitude)
 
+        points.add(LatLng(location.latitude, location.longitude))
+        drawUserPath()
+
         // mMap.clear()
         // val currentLocation = LatLng(location.latitude, location.longitude)
         // mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
         // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, CAMERA_ZOOM))
     }
 
+    private fun drawUserPath() {
+        //mMap.clear()
+
+        val polyLineOptions = PolylineOptions().width(5f).color(Color.BLUE).geodesic(true)
+
+        for (i in points.indices) {
+            val point: LatLng = points[i]
+            polyLineOptions.add(point)
+        }
+
+        mMap.addPolyline(polyLineOptions)
+
+    }
+
     override fun onResume() {
         super.onResume()
-        locationProvider.startLocationUpdates()
+        // locationProvider.startLocationUpdates()
     }
 
     override fun onPause() {
         super.onPause()
-        locationProvider.stopLocationUpdates()
+        // locationProvider.stopLocationUpdates()
     }
 
-    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
         //mMap.isMyLocationEnabled = true
+        getUserCurrentLocation()
 
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getUserCurrentLocation() {
         locationProvider.getFusedLocationClient().lastLocation.addOnSuccessListener { location ->
             if (location != null) {
                 val userLocation = LatLng(location.latitude, location.longitude)
