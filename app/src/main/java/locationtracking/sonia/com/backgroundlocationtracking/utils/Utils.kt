@@ -1,5 +1,7 @@
 package locationtracking.sonia.com.backgroundlocationtracking.utils
 
+import android.util.Log
+
 /**
  * Created by soniawadji on 04/05/18.
  */
@@ -11,7 +13,7 @@ class Utils {
 
         fun logd(TAG: String, message: String) {
             if (DEBUG) {
-                logd(TAG, message)
+                Log.e(TAG, message)
             }
         }
 
