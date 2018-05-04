@@ -1,4 +1,4 @@
-package locationtracking.sonia.com.backgroundlocationtracking
+package locationtracking.sonia.com.backgroundlocationtracking.activity
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -9,6 +9,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import locationtracking.sonia.com.backgroundlocationtracking.R
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
