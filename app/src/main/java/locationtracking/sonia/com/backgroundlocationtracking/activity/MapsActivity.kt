@@ -11,8 +11,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import locationtracking.sonia.com.backgroundlocationtracking.R
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 import android.content.pm.PackageManager
@@ -21,7 +19,6 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.view.View
-import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 import locationtracking.sonia.com.backgroundlocationtracking.service.LocationTrackingService
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.CAMERA_ZOOM
@@ -31,9 +28,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.location.LocationManager
 import android.support.v4.content.LocalBroadcastManager
+import com.google.android.gms.maps.model.*
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.ACTION_LOCATION_BROADCAST
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.FINAL_LOCATION
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LATITUDE
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LONGITUDE
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.POLYLINE_WIDTH
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.USER_LOCATION
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -48,7 +49,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -62,7 +63,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             /**
              * Start the tracking
+             * Clear the map if required
+             * Clear all the location points
              * */
+
+            points.clear()
+            mMap.clear()
+
+            val userLocation = LatLng(userLocation.latitude, userLocation.longitude)
+            mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
 
             startLocationTrackingService()
 
@@ -79,6 +89,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * Stop the tracking
              * */
             stopLocationTrackingService()
+
+            showFinalRoute()
 
             startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.start_shift_btn_bg))
             swipeText.setText(R.string.swipeStartText)
@@ -104,7 +116,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             mMap.clear()
 
                             val userLocation = LatLng(latitude, longitude)
-                            mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
+                            mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
 
                             stopLocationTrackingService()
@@ -121,6 +133,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
     }
 
+    private fun showFinalRoute() {
+
+        val finalLocation = points[points.size - 1]
+        mMap.addMarker(MarkerOptions().position(finalLocation).title(FINAL_LOCATION)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)))
+
+        val builder = LatLngBounds.Builder()
+        for (point in points) {
+            builder.include(point)
+        }
+
+        val bounds: LatLngBounds = builder.build()
+
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
+
+        val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding)
+        mMap.moveCamera(cameraUpdate)
+        mMap.animateCamera(cameraUpdate)
+    }
+
     private fun stopLocationTrackingService() {
         val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
         stopService(intent)
@@ -132,9 +166,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun drawUserPath() {
-        //mMap.clear()
+        mMap.clear()
 
-        val polyLineOptions = PolylineOptions().width(5f).color(Color.BLUE).geodesic(true)
+        if (points.size > 0) {
+            val userLocation = points[0]
+            mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
+        }
+
+        val polyLineOptions = PolylineOptions().width(POLYLINE_WIDTH).color(Color.BLUE).geodesic(true)
 
         for (i in points.indices) {
             val point: LatLng = points[i]
