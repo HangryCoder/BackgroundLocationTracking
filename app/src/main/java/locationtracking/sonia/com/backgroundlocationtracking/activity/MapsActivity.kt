@@ -19,15 +19,17 @@ import locationtracking.sonia.com.backgroundlocationtracking.utils.LocationProvi
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.DialogInterface
+import android.content.Intent
 import android.support.v4.app.ActivityCompat.shouldShowRequestPermissionRationale
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
-import android.widget.Toast
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
+import locationtracking.sonia.com.backgroundlocationtracking.service.LocationService
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.CAMERA_ZOOM
 import java.util.ArrayList
 
 
@@ -36,7 +38,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
     private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
     private lateinit var locationProvider: LocationProvider
-    private val CAMERA_ZOOM = 15f
     private var points: ArrayList<LatLng> = ArrayList()
     private var isShiftStarted = false
 
@@ -49,7 +50,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        locationProvider = LocationProvider(this, this)
+        locationProvider = LocationProvider(this,this)
 
         startShiftBtn.setOnClickListener {
             if (!locationProvider.isTrackingEnabled) {
@@ -58,12 +59,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
                 getUserCurrentLocation()
                 locationProvider.startLocationUpdates()
+                //val intent = Intent(this, LocationService::class.java)
+                //startService(intent)
             }
         }
 
         stopShiftBtn.setOnClickListener {
             if (locationProvider.isTrackingEnabled) {
                 locationProvider.stopLocationUpdates()
+                //val intent = Intent(this, LocationService::class.java)
+                //stopService(intent)
             }
         }
     }
@@ -73,11 +78,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
         points.add(LatLng(location.latitude, location.longitude))
         drawUserPath()
-
-        // mMap.clear()
-        // val currentLocation = LatLng(location.latitude, location.longitude)
-        // mMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
-        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, CAMERA_ZOOM))
     }
 
     private fun drawUserPath() {
