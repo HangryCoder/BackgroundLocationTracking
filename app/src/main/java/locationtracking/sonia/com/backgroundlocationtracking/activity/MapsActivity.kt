@@ -14,8 +14,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import locationtracking.sonia.com.backgroundlocationtracking.R
-import locationtracking.sonia.com.backgroundlocationtracking.interfaces.LocationListener
-import locationtracking.sonia.com.backgroundlocationtracking.utils.LocationProvider
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -38,11 +36,10 @@ import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Com
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LONGITUDE
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
-    //private lateinit var locationProvider: LocationProvider
     private var points: ArrayList<LatLng> = ArrayList()
     private var isShiftStarted = false
     private var userLocation: Location = Location("UserLocation")
@@ -56,13 +53,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        //locationProvider = LocationProvider(this, this)
-
         /**
          * Start the service only to initially fetch the user's location to be displayed on the map!
          * */
-        val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
-        startService(intent)
+        startLocationTrackingService()
 
         startShiftBtn.setOnClickListener {
 
@@ -70,8 +64,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
              * Start the tracking
              * */
 
-            val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
-            startService(intent)
+            startLocationTrackingService()
 
             startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.stop_shift_btn_bg))
             swipeText.setText(R.string.swipeEndText)
@@ -85,8 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
             /**
              * Stop the tracking
              * */
-            val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
-            stopService(intent)
+            stopLocationTrackingService()
 
             startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.start_shift_btn_bg))
             swipeText.setText(R.string.swipeStartText)
@@ -101,10 +93,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                         val latitude = intent.getDoubleExtra(INTENT_LATITUDE, 0.0)
                         val longitude = intent.getDoubleExtra(INTENT_LONGITUDE, 0.0)
 
-                        Utils.logd(TAG, "passLocationData ${latitude} ${longitude}")
+                        Utils.logd(TAG, "passLocationData $latitude $longitude")
 
                         /**
                          * This is done only initially to display user's location on the map
+                         * and then stop the service
                          * */
                         if (userLocation.latitude == 0.0 && userLocation.longitude == 0.0) {
 
@@ -114,8 +107,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                             mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
 
-                            val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
-                            stopService(intent)
+                            stopLocationTrackingService()
                         }
 
                         val tempLocation = Location(LocationManager.GPS_PROVIDER)
@@ -129,28 +121,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
     }
 
-    /**
-     * DELETE THIS LATER!!
-     * */
-    override fun passLocationData(location: Location) {
-        Utils.logd(TAG, "passLocationData ${location.latitude} " + location.longitude)
+    private fun stopLocationTrackingService() {
+        val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
+        stopService(intent)
+    }
 
-        /**
-         * This is done only initially to display user's location on the map
-         * */
-        if (userLocation == null) {
-
-            val userLocation = LatLng(location.latitude, location.longitude)
-            mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
-
-            val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
-            stopService(intent)
-        }
-        userLocation = location //setting this as user location
-
-        points.add(LatLng(location.latitude, location.longitude))
-        //drawUserPath()
+    private fun startLocationTrackingService() {
+        val intent = Intent(this@MapsActivity, LocationTrackingService::class.java)
+        startService(intent)
     }
 
     private fun drawUserPath() {
@@ -168,37 +146,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
 
     }
 
-    override fun onResume() {
-        super.onResume()
-        // locationProvider.startLocationUpdates()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // locationProvider.stopLocationUpdates()
-    }
-
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        //mMap.isMyLocationEnabled = true
-        //getUserCurrentLocation()
-        /*if (userLocation != null) {
-            val userLocation = LatLng(userLocation.latitude, userLocation.longitude)
-            mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
-        }*/
-
-    }
-
-    private fun getUserCurrentLocation() {
-        /* locationProvider.getFusedLocationClient().lastLocation.addOnSuccessListener { location ->
-             if (location != null) {
-                 val userLocation = LatLng(location.latitude, location.longitude)
-                 mMap.addMarker(MarkerOptions().position(userLocation).title("User Location"))
-                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
-             }
-         }*/
     }
 
     /**

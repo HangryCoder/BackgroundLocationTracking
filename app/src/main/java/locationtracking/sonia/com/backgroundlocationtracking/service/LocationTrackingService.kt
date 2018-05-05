@@ -5,7 +5,6 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.google.android.gms.location.*
-import locationtracking.sonia.com.backgroundlocationtracking.interfaces.LocationListener
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
 import android.support.v4.content.LocalBroadcastManager
@@ -40,7 +39,6 @@ class LocationTrackingService : Service() {
                 locationResult ?: return
                 for (location in locationResult.locations) {
                     // Update UI with location data
-                    //locationListener.passLocationData(location)
 
                     val intent = Intent(ACTION_LOCATION_BROADCAST)
                     intent.putExtra(INTENT_LATITUDE, location.latitude)
@@ -61,10 +59,6 @@ class LocationTrackingService : Service() {
                 .setFastestInterval(Constants.FASTEST_UPDATE_INTERVAL)
                 .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
     }
-
-    /*fun getFusedLocationClient(): FusedLocationProviderClient {
-        return fusedLocationClient
-    }*/
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
