@@ -8,13 +8,18 @@ import com.google.android.gms.location.*
 import locationtracking.sonia.com.backgroundlocationtracking.interfaces.LocationListener
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils
+import android.support.v4.content.LocalBroadcastManager
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.ACTION_LOCATION_BROADCAST
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LATITUDE
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LONGITUDE
+
 
 /**
  * Created by soniawadji on 05/05/18.
  */
-class LocationService(val locationListener: LocationListener) : Service() {
+class LocationTrackingService : Service() {
 
-    private val TAG = "LocationService"
+    private val TAG = "LocationTrackingService"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
@@ -35,7 +40,12 @@ class LocationService(val locationListener: LocationListener) : Service() {
                 locationResult ?: return
                 for (location in locationResult.locations) {
                     // Update UI with location data
-                    locationListener.passLocationData(location)
+                    //locationListener.passLocationData(location)
+
+                    val intent = Intent(ACTION_LOCATION_BROADCAST)
+                    intent.putExtra(INTENT_LATITUDE, location.latitude)
+                    intent.putExtra(INTENT_LONGITUDE, location.longitude)
+                    LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
                 }
             }
         }
@@ -52,9 +62,9 @@ class LocationService(val locationListener: LocationListener) : Service() {
                 .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
     }
 
-    fun getFusedLocationClient(): FusedLocationProviderClient {
+    /*fun getFusedLocationClient(): FusedLocationProviderClient {
         return fusedLocationClient
-    }
+    }*/
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
@@ -62,13 +72,13 @@ class LocationService(val locationListener: LocationListener) : Service() {
                 locationCallback,
                 null)
         isTrackingEnabled = true
-        Utils.logd(TAG,"Start Location Updates")
+        Utils.logd(TAG, "Start Location Updates")
     }
 
     fun stopLocationUpdates() {
         fusedLocationClient.removeLocationUpdates(locationCallback)
         isTrackingEnabled = false
-        Utils.logd(TAG,"Stop Location Updates")
+        Utils.logd(TAG, "Stop Location Updates")
     }
 
     override fun onBind(p0: Intent?): IBinder {
