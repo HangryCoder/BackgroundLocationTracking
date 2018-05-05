@@ -27,5 +27,7 @@ class Constants {
 
         const val FINAL_LOCATION = "Final Location"
 
+        const val PERMISSION_REQUEST_CODE: Int = 100
+
     }
 }

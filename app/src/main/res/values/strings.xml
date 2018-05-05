@@ -5,4 +5,5 @@
     <string name="swipeStartText">Swipe left to start shift</string>
     <string name="swipeEndText">Swipe right to end shift</string>
     <string name="totalShiftTime">Total Shift Time</string>
+    <string name="enable_permission_message">GPS permission allows us to access location data. Please allow in App Settings for additional functionality</string>
 </resources>

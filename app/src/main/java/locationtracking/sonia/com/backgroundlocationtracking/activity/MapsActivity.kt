@@ -26,14 +26,17 @@ import android.content.IntentFilter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.location.LocationManager
+import android.os.Build
 import android.support.v4.content.LocalBroadcastManager
 import com.google.android.gms.maps.model.*
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.ACTION_LOCATION_BROADCAST
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.FINAL_LOCATION
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LATITUDE
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LONGITUDE
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.PERMISSION_REQUEST_CODE
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.POLYLINE_WIDTH
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.USER_LOCATION
+import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils.Companion.customToast
 import java.util.*
 
 
@@ -47,7 +50,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var startDate: Date
     private lateinit var endDate: Date
 
-    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -69,28 +71,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * Clear all the location points
              * */
 
-            totalShiftTimeCard.visibility = View.INVISIBLE
+            startShiftFunction()
 
-            points.clear()
-            mMap.clear()
+            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                 if (!checkPermission()) {
+                     requestPermission()
+                 } else {
+                     startShiftFunction()
+                 }
+             } else {
+                 startShiftFunction()
+             }*/
 
-            val userLocation = LatLng(userLocation.latitude, userLocation.longitude)
-            mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
-
-            startLocationTrackingService()
-
-            startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.stop_shift_btn_bg))
-            swipeText.setText(R.string.swipeEndText)
-            endShiftBtn.visibility = View.VISIBLE
-            startShiftBtn.visibility = View.GONE
-
-            //fetch startTime
-            startDate = Calendar.getInstance().time
         }
 
-        endShiftBtn.setOnClickListener {
-
+        endShiftBtn.setOnClickListener()
+        {
             /**
              * Stop the tracking
              * */
@@ -142,6 +138,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         drawUserPath()
                     }
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
+    }
+
+    private fun startShiftFunction() {
+        totalShiftTimeCard.visibility = View.INVISIBLE
+
+        points.clear()
+        mMap.clear()
+
+        val userLocation = LatLng(userLocation.latitude, userLocation.longitude)
+        mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, CAMERA_ZOOM))
+
+        startLocationTrackingService()
+
+        startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.stop_shift_btn_bg))
+        swipeText.setText(R.string.swipeEndText)
+        endShiftBtn.visibility = View.VISIBLE
+        startShiftBtn.visibility = View.GONE
+
+        //fetch startTime
+        startDate = Calendar.getInstance().time
     }
 
     private fun calculateTotalShiftTime() {
@@ -207,6 +224,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+    }
+
+
+    /**
+     * Marshmallow Permissions
+     * */
+
+    private fun checkPermission(): Boolean {
+        val result = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION)
+        return result == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            PERMISSION_REQUEST_CODE -> if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                customToast(applicationContext, "Permission Granted, Now you can access location data.")
+            } else {
+                customToast(applicationContext, "Permission Denied, You cannot access location data.")
+            }
+        }
+    }
+
+    private fun requestPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this@MapsActivity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            customToast(applicationContext, resources.getString(R.string.enable_permission_message))
+        } else {
+            ActivityCompat.requestPermissions(this@MapsActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_CODE)
+        }
     }
 
 }
