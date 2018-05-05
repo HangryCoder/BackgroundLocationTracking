@@ -22,7 +22,6 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_maps.*
 import locationtracking.sonia.com.backgroundlocationtracking.service.LocationTrackingService
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.CAMERA_ZOOM
-import java.util.ArrayList
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -35,15 +34,18 @@ import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Com
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.INTENT_LONGITUDE
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.POLYLINE_WIDTH
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.USER_LOCATION
+import java.util.*
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val TAG = "MapsActivity"
     private lateinit var mMap: GoogleMap
-    private var points: ArrayList<LatLng> = ArrayList()
+    private var points: ArrayList<Location> = ArrayList()
     private var isShiftStarted = false
     private var userLocation: Location = Location("UserLocation")
+    private lateinit var startDate: Date
+    private lateinit var endDate: Date
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +85,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             endShiftBtn.visibility = View.VISIBLE
             startShiftBtn.visibility = View.GONE
 
+            //fetch startTime
+            startDate = Calendar.getInstance().time
         }
 
         endShiftBtn.setOnClickListener {
@@ -92,6 +96,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * */
 
             totalShiftTimeCard.visibility = View.VISIBLE
+
+            calculateTotalShiftTime()
 
             stopLocationTrackingService()
 
@@ -132,21 +138,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         tempLocation.longitude = longitude
                         userLocation = tempLocation //setting this as user location
 
-                        points.add(LatLng(latitude, longitude))
+                        points.add(tempLocation)
                         drawUserPath()
                     }
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
     }
 
+    private fun calculateTotalShiftTime() {
+        endDate = Calendar.getInstance().time
+
+        totalShiftTimeTV.text = Utils.calculateShiftTimeDuration(startDate, endDate)
+    }
+
     private fun showFinalRoute() {
 
         val finalLocation = points[points.size - 1]
-        mMap.addMarker(MarkerOptions().position(finalLocation).title(FINAL_LOCATION)
+        mMap.addMarker(MarkerOptions()
+                .position(LatLng(finalLocation.latitude, finalLocation.longitude))
+                .title(FINAL_LOCATION)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)))
 
         val builder = LatLngBounds.Builder()
         for (point in points) {
-            builder.include(point)
+            builder.include(LatLng(point.latitude, point.longitude))
         }
 
         val bounds: LatLngBounds = builder.build()
@@ -174,19 +188,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.clear()
 
         if (points.size > 0) {
-            val userLocation = points[0]
+            val userLocation = LatLng(points[0].latitude, points[0].longitude)
             mMap.addMarker(MarkerOptions().position(userLocation).title(USER_LOCATION))
         }
 
         val polyLineOptions = PolylineOptions().width(POLYLINE_WIDTH).color(Color.BLUE).geodesic(true)
 
         for (i in points.indices) {
-            val point: LatLng = points[i]
+            val point = LatLng(points[i].latitude, points[i].longitude)
             polyLineOptions.add(point)
         }
 
         mMap.addPolyline(polyLineOptions)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(points[points.size - 1], CAMERA_ZOOM))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(points[points.size - 1].latitude,
+                points[points.size - 1].longitude), CAMERA_ZOOM))
 
     }
 
@@ -194,66 +209,4 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
     }
 
-    /**
-     * Do this later...
-     * Permission Dialog
-     * */
-    val MY_PERMISSIONS_REQUEST_LOCATION = 99
-
-    private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                AlertDialog.Builder(this)
-                        .setTitle("Location Permission Needed")
-                        .setMessage("This app needs the Location permission, please accept to use location functionality")
-                        .setPositiveButton("OK", { dialogInterface, i ->
-                            //Prompt the user once explanation has been shown
-                            ActivityCompat.requestPermissions(this@MapsActivity,
-                                    arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                                    MY_PERMISSIONS_REQUEST_LOCATION)
-                        })
-                        .create()
-                        .show()
-
-
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                        MY_PERMISSIONS_REQUEST_LOCATION)
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
-                    if (ContextCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-                        /* if (mGoogleApiClient == null) {
-                             buildGoogleApiClient()
-                         }
-                         mGoogleMap.setMyLocationEnabled(true)*/
-                    }
-
-                } else {
-
-                    Utils.customToast(this, resources.getString(R.string.permission_denied))
-                }
-                return
-            }
-        }
-    }
 }
