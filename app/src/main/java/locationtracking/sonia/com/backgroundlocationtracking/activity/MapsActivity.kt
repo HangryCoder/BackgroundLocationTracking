@@ -26,6 +26,7 @@ import android.graphics.Color
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
+import android.view.View
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 import locationtracking.sonia.com.backgroundlocationtracking.service.LocationService
@@ -50,10 +51,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        locationProvider = LocationProvider(this,this)
+        locationProvider = LocationProvider(this, this)
 
         startShiftBtn.setOnClickListener {
-            if (!locationProvider.isTrackingEnabled) {
+            /*if (!locationProvider.isTrackingEnabled) {
                 mMap.clear()
                 points.clear()
 
@@ -61,15 +62,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, LocationListener {
                 locationProvider.startLocationUpdates()
                 //val intent = Intent(this, LocationService::class.java)
                 //startService(intent)
-            }
+            }*/
+            startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.stop_shift_btn_bg))
+            swipeText.setText(R.string.swipeEndText)
+            endShiftBtn.visibility = View.VISIBLE
+            startShiftBtn.visibility = View.GONE
+
         }
 
-        stopShiftBtn.setOnClickListener {
-            if (locationProvider.isTrackingEnabled) {
-                locationProvider.stopLocationUpdates()
-                //val intent = Intent(this, LocationService::class.java)
-                //stopService(intent)
-            }
+        endShiftBtn.setOnClickListener {
+            startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.start_shift_btn_bg))
+            swipeText.setText(R.string.swipeStartText)
+            endShiftBtn.visibility = View.GONE
+            startShiftBtn.visibility = View.VISIBLE
         }
     }
 
