@@ -67,6 +67,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * Clear all the location points
              * */
 
+            totalShiftTimeCard.visibility = View.INVISIBLE
+
             points.clear()
             mMap.clear()
 
@@ -88,6 +90,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             /**
              * Stop the tracking
              * */
+
+            totalShiftTimeCard.visibility = View.VISIBLE
+
             stopLocationTrackingService()
 
             showFinalRoute()

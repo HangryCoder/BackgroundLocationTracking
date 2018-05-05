@@ -62,17 +62,21 @@ class LocationTrackingService : Service() {
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
-        fusedLocationClient.requestLocationUpdates(locationRequest,
-                locationCallback,
-                null)
-        isTrackingEnabled = true
-        Utils.logd(TAG, "Start Location Updates")
+        if (!isTrackingEnabled) {
+            fusedLocationClient.requestLocationUpdates(locationRequest,
+                    locationCallback,
+                    null)
+            isTrackingEnabled = true
+            Utils.logd(TAG, "Start Location Updates")
+        }
     }
 
     fun stopLocationUpdates() {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-        isTrackingEnabled = false
-        Utils.logd(TAG, "Stop Location Updates")
+        if (isTrackingEnabled) {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+            isTrackingEnabled = false
+            Utils.logd(TAG, "Stop Location Updates")
+        }
     }
 
     override fun onBind(p0: Intent?): IBinder {

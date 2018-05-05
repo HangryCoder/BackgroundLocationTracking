@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="swipeBtnSize">55dp</dimen>
-    <dimen name="swipeTextSize">15sp</dimen>
+    <dimen name="swipeTextSize">18sp</dimen>
+    <dimen name="total_shift_time_text">18sp</dimen>
+    <dimen name="total_shift_time_value">25sp</dimen>
 </resources>
