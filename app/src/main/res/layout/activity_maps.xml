@@ -58,7 +58,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="6dp"
-            android:src="@drawable/ic_launcher_background" />
+            android:src="@drawable/right" />
 
     </LinearLayout>
 
@@ -85,7 +85,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="6dp"
-            android:src="@mipmap/ic_launcher_round" />
+            android:src="@drawable/left" />
 
     </LinearLayout>
 
@@ -124,9 +124,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:visibility="invisible"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -155,8 +155,8 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:gravity="end"
-                android:textColor="@color/totalShiftTimeBlue"
                 android:text="02h 30m"
+                android:textColor="@color/totalShiftTimeBlue"
                 android:textSize="@dimen/total_shift_time_value"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
