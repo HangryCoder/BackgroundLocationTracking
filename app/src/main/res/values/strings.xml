@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BackgroundLocationTracking</string>
+    <string name="app_name">Background Location Tracking</string>
     <string name="title_activity_maps">Map</string>
     <string name="permission_denied">Permission Denied</string>
     <string name="swipeStartText">Swipe left to start shift</string>
