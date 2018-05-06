@@ -69,10 +69,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (checkPermission()) {
                     startShiftFunction()
+                    customToast(this, resources.getString(R.string.location_tracking_started))
                 } else {
                     customToast(applicationContext, resources.getString(R.string.enable_permission_message))
                 }
             } else {
+                customToast(this, resources.getString(R.string.location_tracking_started))
                 startShiftFunction()
             }
         }
@@ -83,6 +85,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * */
 
             endShiftFunction()
+            customToast(this, resources.getString(R.string.location_tracking_ended))
         }
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -129,10 +132,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             if (!checkPermission()) {
                 requestPermission()
             } else {
-                startLocationTrackingService()
+                if (userLocation.latitude == 0.0 && userLocation.longitude == 0.0) {
+                    startLocationTrackingService()
+                }
             }
         } else {
-            startLocationTrackingService()
+            if (userLocation.latitude == 0.0 && userLocation.longitude == 0.0) {
+                startLocationTrackingService()
+            }
         }
     }
 
@@ -180,26 +187,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun showFinalRoute() {
 
-        val finalLocation = points[points.size - 1]
-        mMap.addMarker(MarkerOptions()
-                .position(LatLng(finalLocation.latitude, finalLocation.longitude))
-                .title(FINAL_LOCATION)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)))
+        if (points.size > 0) {
+            val finalLocation = points[points.size - 1]
+            mMap.addMarker(MarkerOptions()
+                    .position(LatLng(finalLocation.latitude, finalLocation.longitude))
+                    .title(FINAL_LOCATION)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)))
 
-        val builder = LatLngBounds.Builder()
-        for (point in points) {
-            builder.include(LatLng(point.latitude, point.longitude))
+            val builder = LatLngBounds.Builder()
+            for (point in points) {
+                builder.include(LatLng(point.latitude, point.longitude))
+            }
+
+            val bounds: LatLngBounds = builder.build()
+
+            val width = resources.displayMetrics.widthPixels
+            val height = resources.displayMetrics.heightPixels
+            val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
+
+            val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding)
+            mMap.moveCamera(cameraUpdate)
+            mMap.animateCamera(cameraUpdate)
         }
-
-        val bounds: LatLngBounds = builder.build()
-
-        val width = resources.displayMetrics.widthPixels
-        val height = resources.displayMetrics.heightPixels
-        val padding = (width * 0.10).toInt() // offset from edges of the map 10% of screen
-
-        val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, width, height, padding)
-        mMap.moveCamera(cameraUpdate)
-        mMap.animateCamera(cameraUpdate)
     }
 
     private fun stopLocationTrackingService() {
