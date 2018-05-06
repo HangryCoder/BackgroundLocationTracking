@@ -1,7 +1,6 @@
 package locationtracking.sonia.com.backgroundlocationtracking.activity
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
@@ -17,16 +16,13 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AlertDialog
 import android.view.View
-import kotlinx.android.synthetic.main.activity_maps.*
 import locationtracking.sonia.com.backgroundlocationtracking.service.LocationTrackingService
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.CAMERA_ZOOM
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.location.LocationManager
-import android.os.Build
 import android.support.v4.content.LocalBroadcastManager
 import com.google.android.gms.maps.model.*
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.ACTION_LOCATION_BROADCAST
@@ -38,6 +34,9 @@ import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Com
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.USER_LOCATION
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Utils.Companion.customToast
 import java.util.*
+import kotlinx.android.synthetic.main.activity_maps.*
+
+import locationtracking.sonia.com.backgroundlocationtracking.utils.OnDragTouchListener
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -85,26 +84,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         }
 
-        endShiftBtn.setOnClickListener()
-        {
+        endShiftBtn.setOnClickListener {
             /**
              * Stop the tracking
              * */
 
-            totalShiftTimeCard.visibility = View.VISIBLE
-
-            calculateTotalShiftTime()
-
-            stopLocationTrackingService()
-
-            showFinalRoute()
-
-            startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.start_shift_btn_bg))
-            swipeText.setText(R.string.swipeStartText)
-            endShiftBtn.visibility = View.GONE
-            startShiftBtn.visibility = View.VISIBLE
+            endShiftFunction()
         }
-
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 object : BroadcastReceiver() {
@@ -138,6 +124,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         drawUserPath()
                     }
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
+    }
+
+    private fun endShiftFunction() {
+        totalShiftTimeCard.visibility = View.VISIBLE
+
+        calculateTotalShiftTime()
+
+        stopLocationTrackingService()
+
+        showFinalRoute()
+
+        startShiftBg.setImageDrawable(resources.getDrawable(R.drawable.start_shift_btn_bg))
+        swipeText.setText(R.string.swipeStartText)
+        endShiftBtn.visibility = View.GONE
+        startShiftBtn.visibility = View.VISIBLE
     }
 
     private fun startShiftFunction() {
