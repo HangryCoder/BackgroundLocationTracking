@@ -23,6 +23,7 @@ import android.content.IntentFilter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.location.LocationManager
+import android.os.Build
 import android.support.v4.content.LocalBroadcastManager
 import com.google.android.gms.maps.model.*
 import locationtracking.sonia.com.backgroundlocationtracking.utils.Constants.Companion.ACTION_LOCATION_BROADCAST
@@ -57,11 +58,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        /**
-         * Start the service only to initially fetch the user's location to be displayed on the map!
-         * */
-        startLocationTrackingService()
-
         startShiftBtn.setOnClickListener {
 
             /**
@@ -70,18 +66,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
              * Clear all the location points
              * */
 
-            startShiftFunction()
-
-            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                 if (!checkPermission()) {
-                     requestPermission()
-                 } else {
-                     startShiftFunction()
-                 }
-             } else {
-                 startShiftFunction()
-             }*/
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkPermission()) {
+                    startShiftFunction()
+                } else {
+                    customToast(applicationContext, resources.getString(R.string.enable_permission_message))
+                }
+            } else {
+                startShiftFunction()
+            }
         }
 
         endShiftBtn.setOnClickListener {
@@ -124,6 +117,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         drawUserPath()
                     }
                 }, IntentFilter(ACTION_LOCATION_BROADCAST))
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        /**
+         * Start the service only to initially fetch the user's location to be displayed on the map!
+         * */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!checkPermission()) {
+                requestPermission()
+            } else {
+                startLocationTrackingService()
+            }
+        } else {
+            startLocationTrackingService()
+        }
     }
 
     private fun endShiftFunction() {
@@ -241,6 +251,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 customToast(applicationContext, "Permission Granted, Now you can access location data.")
+                startLocationTrackingService()
+
             } else {
                 customToast(applicationContext, "Permission Denied, You cannot access location data.")
             }

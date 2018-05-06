@@ -24,7 +24,7 @@ class Utils {
 
         fun customToast(context: Context, message: String) {
             if (DEBUG) {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
             }
         }
 
